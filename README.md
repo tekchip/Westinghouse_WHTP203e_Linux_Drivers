@@ -11,6 +11,6 @@ To install this on Fedora 42 or similar do the following:
 
 Manually point your printer dialogue at the PPD file.
 
-Copy all the rastertosnail...-westinghouse files to /usr/lib/cups/filter/
+Copy all the rastertosnail...-westinghouse files to /usr/lib/cups/filter/ Most likely this folder will require sudo or root access.
 
 Happy printing!
