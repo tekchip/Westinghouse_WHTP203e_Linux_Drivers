@@ -53,20 +53,20 @@ jobs:
 
       - name: Update spec file version
         run: |
-          sed -i "s/^Version:.*/Version:        ${{ steps.version.outputs.VERSION }}/" westinghouse-whtp203e-driver.spec
+          sed -i "s/^Version:.*/Version:        ${{ steps.version.outputs.VERSION }}/" packaging/westinghouse-whtp203e-driver.spec
 
       - name: Create source tarball
         run: |
           SRCDIR="${HOME}/rpmbuild/SOURCES/westinghouse-whtp203e-driver-${{ steps.version.outputs.VERSION }}"
           mkdir -p "${SRCDIR}"
-          cp rastertosnail*-westinghouse "${SRCDIR}/"
-          cp Westinghouse-WHTP203e.ppd "${SRCDIR}/"
+          cp drivers/filters/rastertosnail*-westinghouse "${SRCDIR}/"
+          cp drivers/ppd/Westinghouse-WHTP203e.ppd "${SRCDIR}/"
           cd "${HOME}/rpmbuild/SOURCES"
           tar czf "westinghouse-whtp203e-driver-${{ steps.version.outputs.VERSION }}.tar.gz" "westinghouse-whtp203e-driver-${{ steps.version.outputs.VERSION }}"
           rm -rf "${SRCDIR}"
 
       - name: Copy spec file
-        run: cp westinghouse-whtp203e-driver.spec "${HOME}/rpmbuild/SPECS/"
+        run: cp packaging/westinghouse-whtp203e-driver.spec "${HOME}/rpmbuild/SPECS/"
 
       - name: Build RPM
         run: |

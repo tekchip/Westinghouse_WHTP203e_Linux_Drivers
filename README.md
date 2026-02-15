@@ -36,7 +36,7 @@ systemctl reboot
 
 # After reboot, build the RPM
 cd Westinghouse_WHTP203e_Linux_Drivers
-./build-rpm.sh
+./packaging/build-rpm.sh
 ```
 
 2. **Install the RPM via rpm-ostree:**
@@ -76,18 +76,17 @@ To install this on Fedora 42 or similar traditional installations do the followi
 Download the files in this repo.
 ```
 git clone https://github.com/tekchip/Westinghouse_WHTP203e_Linux_Drivers.git
+cd Westinghouse_WHTP203e_Linux_Drivers
 ```
-Copy all the rastertosnail...-westinghouse files to /usr/lib/cups/filter/ Most likely this folder will require sudo or root access.
+Copy all the filter files to /usr/lib/cups/filter/ (requires sudo or root access):
 ```
-sudo cp *-westinghouse /usr/lib/cups/filter/
+sudo cp drivers/filters/*-westinghouse /usr/lib/cups/filter/
 ```
-You may run in to permissions issues. You should do the following to avoid these.
+Set proper permissions:
 ```
 sudo chown root:root /usr/lib/cups/filter/*-westinghouse
-```
-```
 sudo chmod 755 /usr/lib/cups/filter/*-westinghouse
 ```
-Add the printer which should be detected and when prompted manually point the printer dialogue to the PPD file.
+Add the printer which should be detected and when prompted manually point the printer dialogue to the PPD file at `drivers/ppd/Westinghouse-WHTP203e.ppd`.
 
 Happy printing!

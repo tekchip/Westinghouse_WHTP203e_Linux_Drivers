@@ -2,6 +2,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 PACKAGE_NAME="westinghouse-whtp203e-driver"
 VERSION="1.0"
 
@@ -24,8 +25,8 @@ mkdir -p "${SRCDIR}"
 
 # Copy files to source directory
 echo "Copying source files..."
-cp "${SCRIPT_DIR}"/rastertosnail*-westinghouse "${SRCDIR}/"
-cp "${SCRIPT_DIR}/Westinghouse-WHTP203e.ppd" "${SRCDIR}/"
+cp "${PROJECT_ROOT}/drivers/filters"/rastertosnail*-westinghouse "${SRCDIR}/"
+cp "${PROJECT_ROOT}/drivers/ppd/Westinghouse-WHTP203e.ppd" "${SRCDIR}/"
 
 # Create source tarball
 echo "Creating source tarball..."
