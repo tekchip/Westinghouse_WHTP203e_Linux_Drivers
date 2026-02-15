@@ -11,6 +11,21 @@ Note the files I've provided are for x64 platform only. The Westinghouse deb fil
 
 For immutable Fedora distributions like Kinoite, Silverblue, or CoreOS:
 
+### Option A: Download Pre-built RPM (Recommended)
+
+1. **Download the latest RPM from [Releases](https://github.com/tekchip/Westinghouse_WHTP203e_Linux_Drivers/releases)**
+
+2. **Install via rpm-ostree:**
+```bash
+rpm-ostree install ~/Downloads/westinghouse-whtp203e-driver-*.rpm
+systemctl reboot
+```
+
+3. **Add the printer:**
+After reboot, the printer should be automatically detected. If not, add it manually through GNOME Settings or system-config-printer and select the "Westinghouse WHTP203e" driver.
+
+### Option B: Build the RPM Package Locally
+
 1. **Build the RPM package:**
 ```bash
 # Install build dependencies (if not already installed)
@@ -35,6 +50,24 @@ systemctl reboot
 
 3. **Add the printer:**
 After reboot, the printer should be automatically detected. If not, add it manually through GNOME Settings or system-config-printer and select the "Westinghouse WHTP203e" driver.
+
+## Creating a New Release
+
+To create a new release with an automatically built RPM:
+
+**Method 1: Create a Git Tag (Automatic)**
+```bash
+git tag v1.0
+git push origin v1.0
+```
+
+**Method 2: Manual Trigger via GitHub**
+1. Go to the "Actions" tab on GitHub
+2. Select "Build RPM and Create Release"
+3. Click "Run workflow"
+4. Enter the version number and choose whether to create a release
+
+The GitHub Actions workflow will automatically build the RPM and attach it to the release.
 
 ## Installation for Traditional Fedora (or similar)
 

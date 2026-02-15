@@ -1,0 +1,119 @@
+name: Build RPM and Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # Triggers on version tags like v1.0, v1.1, etc.
+  workflow_dispatch:  # Allows manual trigger from GitHub UI
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0)'
+        required: true
+        default: '1.0'
+      create_release:
+        description: 'Create a GitHub release'
+        required: true
+        type: boolean
+        default: true
+
+jobs:
+  build-rpm:
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install RPM build tools
+        run: |
+          dnf install -y rpm-build rpmdevtools
+
+      - name: Set up RPM build environment
+        run: rpmdev-setuptree
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "push" ] && [ -n "${{ github.ref_name }}" ]; then
+            # Extract version from tag (remove 'v' prefix)
+            VERSION="${{ github.ref_name }}"
+            VERSION="${VERSION#v}"
+          elif [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="1.0"
+          fi
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Building version: ${VERSION}"
+
+      - name: Update spec file version
+        run: |
+          sed -i "s/^Version:.*/Version:        ${{ steps.version.outputs.VERSION }}/" westinghouse-whtp203e-driver.spec
+
+      - name: Create source tarball
+        run: |
+          SRCDIR="${HOME}/rpmbuild/SOURCES/westinghouse-whtp203e-driver-${{ steps.version.outputs.VERSION }}"
+          mkdir -p "${SRCDIR}"
+          cp rastertosnail*-westinghouse "${SRCDIR}/"
+          cp Westinghouse-WHTP203e.ppd "${SRCDIR}/"
+          cd "${HOME}/rpmbuild/SOURCES"
+          tar czf "westinghouse-whtp203e-driver-${{ steps.version.outputs.VERSION }}.tar.gz" "westinghouse-whtp203e-driver-${{ steps.version.outputs.VERSION }}"
+          rm -rf "${SRCDIR}"
+
+      - name: Copy spec file
+        run: cp westinghouse-whtp203e-driver.spec "${HOME}/rpmbuild/SPECS/"
+
+      - name: Build RPM
+        run: |
+          cd "${HOME}/rpmbuild/SPECS"
+          rpmbuild -bb westinghouse-whtp203e-driver.spec
+
+      - name: Find built RPM
+        id: find_rpm
+        run: |
+          RPM_FILE=$(find "${HOME}/rpmbuild/RPMS" -name "westinghouse-whtp203e-driver*.rpm" -type f)
+          RPM_NAME=$(basename "${RPM_FILE}")
+          echo "RPM_FILE=${RPM_FILE}" >> $GITHUB_OUTPUT
+          echo "RPM_NAME=${RPM_NAME}" >> $GITHUB_OUTPUT
+          echo "Built RPM: ${RPM_NAME}"
+
+      - name: Upload RPM as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpm-package
+          path: ${{ steps.find_rpm.outputs.RPM_FILE }}
+          retention-days: 90
+
+      - name: Create GitHub Release
+        if: |
+          (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) ||
+          (github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == 'true')
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.event_name == 'push' && github.ref_name || format('v{0}', steps.version.outputs.VERSION) }}
+          name: Release ${{ steps.version.outputs.VERSION }}
+          body: |
+            ## Westinghouse WHTP203e Driver v${{ steps.version.outputs.VERSION }}
+
+            Linux CUPS driver for the Westinghouse WHTP203e thermal label printer.
+
+            ### Installation on Fedora Kinoite/Silverblue:
+            ```bash
+            rpm-ostree install westinghouse-whtp203e-driver-${{ steps.version.outputs.VERSION }}-1.fc*.x86_64.rpm
+            systemctl reboot
+            ```
+
+            ### Installation on Traditional Fedora:
+            ```bash
+            sudo dnf install westinghouse-whtp203e-driver-${{ steps.version.outputs.VERSION }}-1.fc*.x86_64.rpm
+            ```
+
+            After installation, add your printer through system settings or system-config-printer.
+          files: |
+            ${{ steps.find_rpm.outputs.RPM_FILE }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
