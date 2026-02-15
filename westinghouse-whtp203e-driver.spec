@@ -1,4 +1,5 @@
 %global _cups_serverbin %{_prefix}/lib/cups
+%global debug_package %{nil}
 
 Name:           westinghouse-whtp203e-driver
 Version:        1.0
